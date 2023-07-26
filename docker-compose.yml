@@ -1,0 +1,114 @@
+version: "3"
+services:
+  node-service:
+    container_name: node-service
+    build: ./SHOTPING-backend/shotping_node
+    restart: always
+    ports:
+      - 8080:8080
+    volumes:
+      - ./SHOTPING-backend/shotping_node:/SHOTPING-backend/shotping_node
+      - ./logs:/usr/src/app/logs
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - DB_PORT=${DB_PORT}
+      - ACCESS_KEY=${ACCESS_KEY}
+      - SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY}
+    networks:
+      - app-tier
+    command: npm run dev
+
+  flask-service:
+    container_name: flask-service
+    build: ./SHOTPING-backend/shotping_flask
+    restart: always
+    ports:
+      - 5001:5000
+    volumes:
+      - ./SHOTPING-backend/shotping_flask:/app
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - app-tier
+    command: gunicorn -b :5000 app:app
+
+  frontend:
+    container_name: SHOTPING-frontend
+    build:
+      context: ./SHOTPING-frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./SHOTPING-frontend/:/SHOTPING-frontend
+      - build_folder:/SHOTPING-frontend/dist
+      - ./SHOTPING-frontend/node_modules/:/SHOTPING-frontend/node_modules
+    tty: true
+    networks:
+      - app-tier
+    depends_on:
+      - node-service
+      - flask-service
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./nginx
+      dockerfile: dockerfile
+    ports:
+      - 80:80
+      - 443:443 #https에 대한 포트설정
+    expose:
+      - 80
+      - 443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+      - build_folder:/var/www/SHOTPING-frontend
+      - ./nginx/log:/var/log/nginx
+    networks:
+      - app-tier
+    depends_on:
+      - node-service
+      - flask-service
+      - frontend
+    restart: always
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: "rabbitmq:3-management"
+    hostname: "rabbitmq"
+    restart: unless-stopped # 컨테이너 종료시 (재시작여부) 종료 코드와 상관없이 컨테이너가 다시시작하지만 서비스가 중지되거나 제거되면 다시 시작을 중지
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - app-tier
+    ports:
+      - 5672:5672 #rabbitmq AMQP 기본 포트 번호
+      - 15672:15672 #Rabbitmq web
+
+  celery:
+    container_name: celery
+    build: ./SHOTPING-backend/shotping_flask
+    volumes:
+      - ./SHOTPING-backend/shotping_flask:/code
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - app-tier
+    command: celery -A tasks worker --loglevel=info --pool=threads
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  build_folder: null
+  elasticsearch:
+
+networks:
+  app-tier:
+    driver: bridge

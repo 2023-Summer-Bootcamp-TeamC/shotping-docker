@@ -1,0 +1,249 @@
+version: "3"
+services:
+  node-service:
+    container_name: node-service
+    build: ./SHOTPING-backend/shotping_node
+    restart: always
+    ports:
+      - 8080:8080
+    volumes:
+      - ./SHOTPING-backend/shotping_node:/SHOTPING-backend/shotping_node
+      - ./logs:/usr/src/app/logs
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - DB_PORT=${DB_PORT}
+      - ACCESS_KEY=${ACCESS_KEY}
+      - SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY}
+    networks:
+      - app-tier
+    command: npm run dev
+
+  flask-service:
+    container_name: flask-service
+    build: ./SHOTPING-backend/shotping_flask
+    restart: always
+    ports:
+      - 5001:5000
+    volumes:
+      - ./SHOTPING-backend/shotping_flask:/app
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - app-tier
+    command: gunicorn -b :5000 app:app
+
+  frontend:
+    container_name: SHOTPING-frontend
+    build:
+      context: ./SHOTPING-frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./SHOTPING-frontend/:/SHOTPING-frontend
+      - build_folder:/SHOTPING-frontend/dist
+      - ./SHOTPING-frontend/node_modules/:/SHOTPING-frontend/node_modules
+    tty: true
+    networks:
+      - app-tier
+    depends_on:
+      - node-service
+      - flask-service
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./nginx
+      dockerfile: dockerfile
+    ports:
+      - 80:80
+      - 443:443
+    expose:
+      - 80
+      - 443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+      - build_folder:/var/www/SHOTPING-frontend
+      - ./nginx/log:/var/log/nginx
+    networks:
+      - app-tier
+    depends_on:
+      - node-service
+      - flask-service
+      - frontend
+    restart: always
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: "rabbitmq:3-management"
+    hostname: "rabbitmq"
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - app-tier
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+  celery:
+    container_name: celery
+    build: ./SHOTPING-backend/shotping_flask
+    volumes:
+      - ./SHOTPING-backend/shotping_flask:/code
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - app-tier
+    command: celery -A tasks worker --loglevel=info --pool=threads
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    ports:
+      - 9090:9090
+
+  cadvisor:
+    container_name: cadvisor
+    image: zcube/cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - 8081:8080
+
+  grafana:
+    container_name: grafana
+    build:
+      context: ./monitoring/grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+    ports:
+      - 9100:9100
+
+  alertmanager:
+    container_name: alertmanager
+    image: prom/alertmanager
+    volumes:
+      - ./monitoring/alertmanager:/etc/alertmanager
+    ports:
+      - 9093:9093
+    depends_on:
+      - prometheus
+
+  elasticsearch:
+    container_name: elasticsearch
+    build:
+      context: ./elk/elasticsearch
+      args:
+        ELASTIC_VERSION: 8.8.2
+    volumes:
+      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+      - elasticsearch:/usr/share/elasticsearch/data:Z
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      node.name: elasticsearch
+      ES_JAVA_OPTS: -Xms256m -Xmx256m
+      ELASTIC_PASSWORD: changeme
+      discovery.type: single-node
+    restart: unless-stopped
+    mem_limit: 512m
+
+  logstash:
+    container_name: logstash
+    build:
+      context: ./elk/logstash
+      args:
+        ELASTIC_VERSION: 8.8.2
+    volumes:
+      - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+    ports:
+      - 5044:5044
+      - 50000:50000/tcp
+      - 50000:50000/udp
+      - 9600:9600
+    environment:
+      LS_JAVA_OPTS: -Xms256m -Xmx256m
+      LOGSTASH_INTERNAL_PASSWORD: changeme
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    mem_limit: 512m
+
+  kibana:
+    container_name: kibana
+    build:
+      context: ./elk/kibana
+      args:
+        ELASTIC_VERSION: 8.8.2
+    volumes:
+      - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+    ports:
+      - 5601:5601
+    environment:
+      KIBANA_SYSTEM_PASSWORD: changeme
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  filebeat:
+    container_name: filebeat
+    build:
+      context: ./elk/filebeat
+      args:
+        ELASTIC_VERSION: 8.8.2
+    entrypoint: "filebeat -e -strict.perms=false"
+    volumes:
+      - ./elk/filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./elk/logs:/usr/share/filebeat/logs
+    depends_on:
+      - logstash
+      - elasticsearch
+      - kibana
+    mem_limit: 512m
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  build_folder: null
+  elasticsearch:
+
+networks:
+  app-tier:
+    driver: bridge

@@ -1,0 +1,7 @@
+[submodule "SHOTPING-frontend"]
+	path = SHOTPING-frontend
+	url = https://github.com/2023-Summer-Bootcamp-TeamC/SHOTPING-frontend.git
+
+[submodule "SHOTPING-backend"]
+	path = SHOTPING-backend
+	url = https://github.com/2023-Summer-Bootcamp-TeamC/SHOTPING-backend.git

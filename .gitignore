@@ -1,0 +1,22 @@
+node_modules
+.env
+alertmanager.yml
+
+### Node ###
+# Logs
+log
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+.DS_Store
+.AppleDouble
+.LSOverride 
+
+# Nuxt.js build / generate output
+.nuxt
+dist
