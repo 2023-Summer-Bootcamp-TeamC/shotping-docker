@@ -8,7 +8,7 @@ services:
       - 8080:8080
     volumes:
       - ./SHOTPING-backend/shotping_node:/SHOTPING-backend/shotping_node
-      - ./logs:/usr/src/app/logs
+      - ./elk/logs:/usr/src/logs
     environment:
       - MYSQL_HOST=${MYSQL_HOST}
       - MYSQL_USER=${MYSQL_USER}
@@ -67,6 +67,8 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
       - build_folder:/var/www/SHOTPING-frontend
       - ./nginx/log:/var/log/nginx
+      - ./certbot/conf:/etc/letsencrypts
+      - ./certbot/www:/var/www/certbot
     networks:
       - app-tier
     depends_on:
