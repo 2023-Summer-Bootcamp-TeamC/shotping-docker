@@ -30,8 +30,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "name": "${DS_PROMETHEUS}"
       },
       "editable": true,
       "error": false,
@@ -74,8 +73,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(container_cpu_usage_seconds_total{name=~\".+\"}[$interval])) by (name) * 100",
           "format": "time_series",
@@ -128,8 +126,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "name": "${DS_PROMETHEUS}"
       },
       "editable": true,
       "error": false,
@@ -172,8 +169,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "{__name__=~\"^node_load.*\"}",
           "intervalFactor": 2,
@@ -220,8 +216,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "name": "${DS_PROMETHEUS}"
       },
       "editable": true,
       "error": false,
@@ -264,8 +259,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "sum(container_memory_rss{name=~\".+\"}) by (name)",
           "hide": false,
@@ -276,8 +270,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "container_memory_usage_bytes{name=~\".+\"}",
           "hide": true,
@@ -325,8 +318,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "name": "${DS_PROMETHEUS}"
       },
       "editable": true,
       "error": false,
@@ -371,8 +363,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(container_network_transmit_bytes_total{name=~\".+\"}[$interval])) by (name)",
           "intervalFactor": 2,
@@ -382,8 +373,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "rate(container_network_transmit_bytes_total{id=\"/\"}[$interval])",
           "hide": true,
@@ -434,8 +424,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "name": "${DS_PROMETHEUS}"
       },
       "editable": true,
       "error": false,
@@ -478,8 +467,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "container_memory_rss{name=~\".+\"}",
           "hide": true,
@@ -490,8 +478,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "container_memory_usage_bytes{name=~\".+\"}",
           "hide": true,
@@ -502,8 +489,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "sum(container_memory_cache{name=~\".+\"}) by (name)",
           "hide": false,
@@ -550,8 +536,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "name": "${DS_PROMETHEUS}"
       },
       "editable": true,
       "error": false,
@@ -594,8 +579,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(container_network_receive_bytes_total{name=~\".+\"}[$interval])) by (name)",
           "intervalFactor": 2,
@@ -605,8 +589,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "- rate(container_network_transmit_bytes_total{name=~\".+\"}[$interval])",
           "hide": true,
@@ -655,8 +638,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "name": "${DS_PROMETHEUS}"
       },
       "editable": true,
       "error": false,
@@ -699,8 +681,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(container_network_receive_bytes_total{id=\"/\"}[$interval])) by (id)",
           "intervalFactor": 2,
@@ -710,8 +691,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "name": "${DS_PROMETHEUS}"
           },
           "expr": "- sum(rate(container_network_transmit_bytes_total{id=\"/\"}[$interval])) by (id)",
           "hide": false,
@@ -867,8 +847,7 @@
           "value": "cadvisor"
         },
         "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
+          "name": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(container_cpu_user_seconds_total, job)",
         "hide": 0,
@@ -895,8 +874,7 @@
           "value": "$__all"
         },
         "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
+          "name": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(container_cpu_user_seconds_total{job=~\"$job\"}, instance)",
         "hide": 0,
@@ -923,8 +901,7 @@
           "value": ""
         },
         "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
+          "name": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(container_cpu_user_seconds_total{instance=~\"$node:(.*)\"}, instance)",
         "hide": 0,
@@ -951,8 +928,7 @@
           "value": "$__all"
         },
         "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
+          "name": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(container_cpu_user_seconds_total{instance=~\"10.115.220.32:8080|10.115.220.33:8080\", name!=\"cadvisor\"}, name)",
         "hide": 0,
@@ -978,8 +954,7 @@
           "value": "$__all"
         },
         "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
+          "name": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(container_cpu_user_seconds_total{instance=~\"10.115.222.21:8080|10.115.222.22:8080\", name!=\"cadvisor\"}, name)",
         "hide": 0,
