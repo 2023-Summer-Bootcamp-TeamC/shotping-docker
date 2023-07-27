@@ -28,9 +28,9 @@ jobs:
 
       - name: Build and Push docker images
         run: |
-          docker-compose -f docker-compose.yml build
+          docker-compose -f docker-compose.prod.yml build
           docker images
-          docker-compose -f docker-compose.yml push
+          docker-compose -f docker-compose.prod.yml push
 
       - name: Execute remote ssh commands to deploy
         uses: appleboy/ssh-action@master
@@ -39,8 +39,12 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd SHOTPING-backend
+            cd shotping-docker
             git pull
-            docker-compose -f docker-compose.yml down
-            docker-compose -f docker-compose.yml pull
-            docker-compose -f docker-compose.yml up -d
+            echo "${{ secrets.ENV }}" > .env
+            echo "${{ secrets.ALERTMANAGER }}" > alertmanager.yml
+            mkdir monitoring/alertmanager
+            mv alertmanager.yml monitoring/alertmanager/
+            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml up -d
